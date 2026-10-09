@@ -10,13 +10,15 @@
 namespace djmrec {
 
 /**
- * CDJ-3000-style RGB waveform analyzer.
+ * CDJ-3000-style 3-band waveform analyzer.
  *
- * Rather than an expensive full FFT, this uses three 2nd-order IIR filters
- * (low-pass ~250Hz, band-pass ~250–2000Hz, high-pass ~2000Hz) — a lightweight visualization filter bank — to split the left and right signals independently
- * into three frequency bands. Band energies are accumulated into fixed-width
- * display bins (~6ms each at 48kHz), producing a rolling 512-bin waveform
- * where each bin carries [amplitude, lowEnergy, midEnergy, highEnergy].
+ * Rather than an expensive full FFT, this uses 2nd-order IIR filters (low-pass, band-pass and
+ * high-pass) — a lightweight visualization filter bank — to split the left and right signals
+ * independently into three frequency bands. Each display bin (~6 ms at 48 kHz) keeps every
+ * band's peak; a per-band release envelope and level curve turn those into rekordbox's 3-band
+ * detail values (PWV7: low, mid, high, byte / 128). The curves were fitted against rekordbox's
+ * own PWV7 tags (see kBandCurves). The result is a rolling 512-bin waveform where each bin
+ * carries [amplitude, low, mid, high].
  *
  * Thread safety: pushFrames() is called from the realtime audio callback
  * (must not allocate/block); getBins() is called from the UI polling thread.
@@ -37,7 +39,7 @@ public:
     /**
      * Called from the realtime audio callback (or libusb event thread) for
      * every captured frame batch. Analyzes stereo → mono, runs the three IIR
-     * filters per-sample, and accumulates peak + band energy into the current
+     * filters per-sample, and accumulates the peak and band peaks into the current
      * display bin. When kFramesPerBin samples have been accumulated the bin
      * is committed and the next bin begins.
      *
@@ -58,7 +60,8 @@ public:
      * which must be at least kBinCount * 4 floats. Layout:
      *   [amp0, low0, mid0, high0, amp1, low1, mid1, high1, ...]
      *
-     * Each value is normalized to [0, 1]. Safe to call from any thread.
+     * Amplitude is the bin's peak sample; low, mid and high are rekordbox 3-band levels
+     * (PWV7 byte / 128). Each value is normalized to [0, 1]. Safe to call from any thread.
      */
     void getBins(float* outBins, uint32_t* sequence = nullptr) const;
 
@@ -66,6 +69,17 @@ public:
     // Call only while the audio producer is stopped.
     void reset();
     float binDurationMillis() const { return mBinDurationMillis; }
+
+    /**
+     * rekordbox level of one band: byte / 128 = min(1, gain * envelope^exponent), where the
+     * envelope is the band's peak with a release of releasePerEntry per PWV7 entry (1/150 s).
+     */
+    struct BandCurve {
+        float gain;
+        float exponent;
+        float releasePerEntry;
+    };
+    static const BandCurve kBandCurves[3]; // low, mid, high
 
 private:
     /** 2nd-order Butterworth IIR filter (Direct Form I) for a single band. */
@@ -107,19 +121,19 @@ private:
     void commitBin();
 
     // Three IIR filters, designed at construction time for the actual sample rate.
-    BandFilter mLowFilter[2];   // 250 Hz low-pass  → red channel
-    BandFilter mMidFilter1[2];  // 250 Hz high-pass  → (then subtract mid lpf2)
-    BandFilter mMidFilter2[2];  // 2000 Hz low-pass → mid = midFilter2(midFilter1(x))
-    BandFilter mHighFilter[2];  // 2000 Hz high-pass → blue channel
+    BandFilter mLowFilter[2];   // low-pass  → low band
+    BandFilter mMidFilter1[2];  // high-pass  → mid = midFilter2(midFilter1(x))
+    BandFilter mMidFilter2[2];  // low-pass
+    BandFilter mHighFilter[2];  // high-pass → high band
 
     // Per-bin accumulators (written by realtime thread, swapped atomically).
     struct BinAccum {
         float peakAbs = 0.0f;    // max absolute amplitude this bin
-        float lowSum = 0.0f;     // sum of |low| samples
-        float midSum = 0.0f;     // sum of |mid| samples
-        float highSum = 0.0f;    // sum of |high| samples
+        float bandPeak[3] = {};  // max |low|, |mid|, |high| over both channels
         int sampleCount = 0;
     };
+    float mEnvelope[3] = {};     // realtime thread: band peak envelopes
+    float mReleasePerBin[3] = {};
 
     // Atomic rolling history, oldest bin first when read.
     BinAccum mCurrent;

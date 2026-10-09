@@ -30,10 +30,14 @@ val WaveformLow = Color(0xFFFF315E)
 val WaveformMid = Color(0xFF29F19C)
 val WaveformHigh = Color(0xFF25A7FF)
 
-// CDJ-3000 "3Band" waveform layers: blue body (low) -> amber (mid) -> white (high).
-val WaveformCdjLow = Color(0xFF2E6BFF)
-val WaveformCdjMid = Color(0xFFF0A93C)
+// CDJ-3000 "3Band" waveform: rekordbox's colour for each set of bands reaching a height.
+val WaveformCdjLow = Color(0xFF0055E1)
+val WaveformCdjMid = Color(0xFFFFA600)
 val WaveformCdjHi = Color(0xFFFFFFFF)
+val WaveformCdjLowMid = Color(0xFFB4690A)
+val WaveformCdjLowHi = Color(0xFFD2DCFA)
+val WaveformCdjMidHi = Color(0xFFFFF0D7)
+val WaveformCdjAll = Color(0xFFF5EBD7)
 
 // VU meter gradient stops (green -> amber -> red as level approaches 0 dBFS).
 val MeterGreen = AccentGreen

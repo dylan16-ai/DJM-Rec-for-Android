@@ -53,10 +53,33 @@ int main() {
         analyzer.getBins(bins.data());
         for (float value : bins) assert(value == 0.0f);
     }
+    {
+        // rekordbox levels: a steady half-scale 80 Hz tone reads gain * 0.5^exponent on the
+        // low band, and once it stops the level falls by the release per PWV7 entry (1/150 s).
+        const int rate = 48000;
+        const auto& curve = djmrec::WaveformAnalyzer::kBandCurves[0];
+        djmrec::WaveformAnalyzer analyzer(rate);
+        std::vector<int32_t> samples(rate * 2);
+        for (int frame = 0; frame < rate; ++frame) {
+            const auto sample = static_cast<int32_t>(std::sin(6.283185307179586 * 80.0 * frame / rate) * 1073741824.0);
+            samples[frame * 2] = samples[frame * 2 + 1] = sample;
+        }
+        analyzer.pushFrames(samples.data(), rate);
+        Snapshot bins{};
+        analyzer.getBins(bins.data());
+        const size_t low = bins.size() - 3;
+        assert(std::fabs(bins[low] - curve.gain * std::pow(0.5f, curve.exponent)) < 0.02f);
+        std::vector<int32_t> silence(rate / 5 * 2, 0); // 0.2 s = 30 entries
+        analyzer.pushFrames(silence.data(), rate / 5);
+        analyzer.getBins(bins.data());
+        const float decayed = curve.gain * std::pow(0.5f * std::pow(curve.releasePerEntry, 30.0f), curve.exponent);
+        assert(std::fabs(bins[low] - decayed) < 0.02f);
+        assert(bins[low] < 0.5f * curve.gain * 0.5f);
+    }
     int32_t samples[] = {0, 100, -100, std::numeric_limits<int32_t>::max(), std::numeric_limits<int32_t>::min()};
     djmrec::applyRecordingGain(samples, 5, 2.0f);
     assert(samples[0] == 0 && samples[1] == 200 && samples[2] == -200);
     assert(samples[3] == std::numeric_limits<int32_t>::max());
     assert(samples[4] == std::numeric_limits<int32_t>::min());
-    std::cout << "Audio signal checks passed: phase, stereo, bands, rates, history, reset, gain saturation\n";
+    std::cout << "Audio signal checks passed: phase, stereo, bands, rates, history, reset, levels, release, gain saturation\n";
 }
