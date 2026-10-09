@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.47.0 (2026-10-09)
+
+### Waveform
+- Draw the 3-band waveform with rekordbox's own maths, on the recorder and on every multitrack
+  lane. Each band reaches its own height (highs through rekordbox's raised cosine) and where
+  bands overlap the colours mix as on a CDJ-3000: cream at the base, brown where lows and mids
+  meet, and blue, amber or white at the tip.
+- Measure the bands the way rekordbox does: each band's peak with a short release, on a
+  200-1500 Hz mid band, calibrated against rekordbox's own analysis of 156 tracks. Kicks now
+  decay smoothly, and hi-hats show as sharp white spikes instead of a constant white band
+  through the middle. On tracks outside the calibration the band heights are within 3-4 % of
+  rekordbox's on average (previously 7-16 %).
+- Unarmed multitrack lanes fade evenly instead of showing the bands through each other.
+
 ## v0.46.0 (2026-10-01)
 
 ### Multitrack recording (Advanced mode)
