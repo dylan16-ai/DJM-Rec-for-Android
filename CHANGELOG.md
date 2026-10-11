@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.47.1 (2026-10-11)
+
+- Fix recordings on the DJM-750MK2 playing back at double speed. The mixer only streams at
+  48 kHz, but the app asked it for 96 kHz and labelled every recording that way, so sets
+  sounded sped up and the MP3 copy lost its high end. The DJM-750MK2 now records at 48 kHz.
+- Always record at the rate the audio actually arrives at over USB: if a mixer runs at a
+  different rate than expected, the file now follows the mixer instead of the expectation, and
+  the mismatch shows up in the diagnostics report.
+- Recordings already made on a DJM-750MK2 can be repaired: in Audacity set the track rate to
+  48000 Hz for a WAV or FLAC (lossless), or 24000 Hz for the MP3 copy.
+
 ## v0.47.0 (2026-10-09)
 
 ### Waveform
