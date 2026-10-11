@@ -60,7 +60,8 @@ class PioneerMixerProfileTest {
         assertEquals(12, PioneerMixerProfile.DJM_750MK2.vendorCaptureChannelCount)
         assertEquals(3, PioneerMixerProfile.DJM_750MK2.vendorCaptureSubframeSize)
         assertEquals(24, PioneerMixerProfile.DJM_750MK2.vendorCaptureBitResolution)
-        assertEquals(listOf(96_000), PioneerMixerProfile.DJM_750MK2.vendorCaptureSampleRates)
+        // 48 kHz only (ALSA quirk): requesting 96 kHz recorded every set at double speed.
+        assertEquals(listOf(48_000), PioneerMixerProfile.DJM_750MK2.vendorCaptureSampleRates)
         assertEquals(8, PioneerMixerProfile.DJM_450.vendorCaptureChannelCount)
         assertEquals(3, PioneerMixerProfile.DJM_450.vendorCaptureSubframeSize)
         assertEquals(24, PioneerMixerProfile.DJM_450.vendorCaptureBitResolution)

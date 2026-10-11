@@ -86,14 +86,16 @@ constexpr PioneerMixerProfile kDjm900Nxs2Profile{
 // Same vendor-class interface topology as DJM-900NXS2: isochronous IN endpoint (0x82) lives on
 // if0/alt1 declared as USB_CLASS_VENDOR_SPEC (255), OUT endpoint (0x01) on the same interface.
 // requiresPlaybackTraffic and vendor-capture override applied per the same evidence chain.
-// DJM-750MK2 uses 10-channel playback OUT (keepalive) and 12-channel capture IN per ALSA quirk.
+// ALSA quirk: "10 channels playback & 12 channels capture @ 48kHz S24LE" -- unlike the
+// DJM-900NXS2 the 750MK2 only runs at 48 kHz. It accepts a 96 kHz SET_CUR but keeps streaming
+// 48 kHz, which recorded every set at double speed while this profile said 96 kHz (issue #4).
 constexpr PioneerMixerProfile kDjm750Mk2Profile{
     "DJM-750MK2", 0x001B, 0x001B, 5, 0,
     {0x0F, 0x0F, 0x0F, 0x0F, 0x0A, -1},
     {0x0F, 0x0F, 0x0F, 0x0F, 0x0A, -1},
     PioneerRouteReadMode::AllOutputs, true, true, 0, 1,
     10, 3,  // playback OUT keepalive (10ch per ALSA snd-usb-audio quirk)
-    12, 3, 24, 96000 // capture IN PCM
+    12, 3, 24, 48000 // capture IN PCM
 };
 
 constexpr PioneerMixerProfile kDjm450Profile{

@@ -302,6 +302,7 @@ std::string UsbIsoAudioSource::start(const Config& config, FrameCallback callbac
         mRateProbePackets = 0;
         mCapturePacketsPerSecond = 0;
         mConfirmedClockRate = mMixerProfile ? mMixerProfile->fixedCaptureInSampleRate : 0;
+        mPacketSampleRate.store(0, std::memory_order_relaxed);
         mRateProbeStarted = false;
         mRateProbeResolved = false;
     }
@@ -786,7 +787,8 @@ std::string UsbIsoAudioSource::diagnosticSummary() const {
         << "wire=" << mConfig.totalChannels << "ch/" << mConfig.bitResolution
         << "bit/subframe" << mConfig.subframeSize << '\n'
         << "sample_rate=requested:" << mConfig.requestedSampleRate
-        << " opened:" << openedSampleRate() << '\n'
+        << " opened:" << openedSampleRate()
+        << " packet_cadence:" << mPacketSampleRate.load(std::memory_order_relaxed) << '\n'
         << "channel_offset=requested:" << mConfig.extractChannelOffset
         << " resolved:" << mResolvedChannelOffset.load(std::memory_order_relaxed) << '\n'
         << "clock=control_if:" << mConfig.clockControlInterfaceNumber
@@ -1005,8 +1007,12 @@ void UsbIsoAudioSource::updateMeasuredSampleRate(size_t payloadBytes) {
     const uint64_t frames = mRateProbeBytes / (mConfig.subframeSize * mConfig.totalChannels);
     const int rawWallRate = elapsed > 0 ? static_cast<int>(std::lround(frames / elapsed)) : 0;
     const int packetRate = usbPacketSampleRate(frames, mRateProbePackets, mCapturePacketsPerSecond);
-    const int resolved = mConfirmedClockRate > 0 ? mConfirmedClockRate :
-        mCapturePacketsPerSecond > 0 ? packetRate : nominalUsbSampleRate(rawWallRate);
+    const int resolved = resolveUsbSampleRate(mConfirmedClockRate, packetRate, mCapturePacketsPerSecond, rawWallRate);
+    mPacketSampleRate.store(packetRate, std::memory_order_relaxed);
+    if (packetRate > 0 && mConfirmedClockRate > 0 && packetRate != mConfirmedClockRate) {
+        LOGW("USB stream arrives at %d Hz, not the expected %d Hz; recording at the measured rate",
+             packetRate, mConfirmedClockRate);
+    }
     mOpenedSampleRate.store(resolved, std::memory_order_release);
     LOGI("USB rate resolved=%d Hz; packet_rate=%d Hz; wall_estimate=%d Hz; confirmed_clock=%d Hz; packets_per_second=%d",
         resolved, packetRate, rawWallRate, mConfirmedClockRate, mCapturePacketsPerSecond);

@@ -21,4 +21,14 @@ inline int usbPacketSampleRate(uint64_t frames, uint64_t packets, int packetsPer
     return nominalUsbSampleRate(static_cast<int>(std::llround(
         static_cast<double>(frames) * packetsPerSecond / packets)));
 }
+
+// The packet cadence is the rate the samples actually arrive at, so a nominal cadence wins over
+// the rate a mixer profile or clock query expected: a mixer can accept a rate request and keep
+// streaming its own clock (the DJM-750MK2 took 96 kHz and sent 48 kHz). Without a usable
+// cadence, fall back to the expected rate, and to the wall clock only when packets are untimed.
+inline int resolveUsbSampleRate(int expectedRate, int packetRate, int packetsPerSecond, int wallRate) {
+    if (packetRate > 0) return packetRate;
+    if (expectedRate > 0) return expectedRate;
+    return packetsPerSecond > 0 ? 0 : nominalUsbSampleRate(wallRate);
+}
 }

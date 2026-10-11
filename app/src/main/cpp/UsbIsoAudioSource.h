@@ -212,7 +212,8 @@ private:
     std::atomic<bool> mRateProbeResolved{false};
     uint64_t mRateProbePackets = 0;
     int mCapturePacketsPerSecond = 0;
-    int mConfirmedClockRate = 0;
+    int mConfirmedClockRate = 0;         // expected rate: mixer profile or clock/endpoint query
+    std::atomic<int> mPacketSampleRate{0}; // measured from packet cadence, 0 if unusable
 };
 
 } // namespace djmrec

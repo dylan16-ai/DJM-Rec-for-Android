@@ -94,13 +94,14 @@ enum class PioneerMixerProfile(
         vendorCaptureSampleRates = listOf(96_000),
         additionalMixOutputs = listOf(4)
     ),
+    // Fixed 48 kHz per the ALSA quirk ("12 channels capture @ 48kHz"); see kDjm750Mk2Profile.
     DJM_750MK2(
         "DJM-750MK2", setOf(0x001B), 0, 5, RouteReadMode.ALL_OUTPUTS,
         listOf(0x0F, 0x0F, 0x0F, 0x0F, 0x0A),
         requiresPlaybackTraffic = true, playbackInterface = 0, playbackAlternateSetting = 1,
         vendorCaptureInterface = 0, vendorCaptureAlternateSetting = 1,
         vendorCaptureChannelCount = 12, vendorCaptureSubframeSize = 3,
-        vendorCaptureBitResolution = 24, vendorCaptureSampleRates = listOf(96_000)
+        vendorCaptureBitResolution = 24, vendorCaptureSampleRates = listOf(48_000)
     ),
     // ALSA DJM-S11 contract: capture if2, playback if1, MIX REC OUT on USB5/6 only.
     DJM_S11(

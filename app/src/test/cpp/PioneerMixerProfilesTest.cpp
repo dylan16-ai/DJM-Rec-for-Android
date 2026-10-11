@@ -18,10 +18,16 @@ int main() {
     assert(kDjm450Profile.playbackOutChannels == 8);
     assert(kDjm450Profile.playbackOutSubframeBytes == 3);
     assert(kDjm450Profile.fixedCaptureInSampleRate == 48000);
+    // DJM-750MK2 captures 12ch S24_3LE at 48 kHz only (ALSA quirk); 96 kHz recorded at 2x speed.
+    assert(kDjm750Mk2Profile.fixedCaptureInSampleRate == 48000);
+    assert(kDjm750Mk2Profile.captureInChannels == 12);
+    assert(kDjm750Mk2Profile.captureInSubframeBytes == 3);
+    assert(kDjm750Mk2Profile.playbackOutChannels == 10);
+    assert(kDjm900Nxs2Profile.fixedCaptureInSampleRate == 96000);
     // Existing default MIX routes remain model-specific.
     assert(pioneerMixRouteValue(kDjmA9Profile, -1) == 0x050a);
     assert(pioneerMixRouteValue(kDjm750Mk2Profile, -1) == 0x010f);
     assert(pioneerMixRouteValue(kDjmS11Profile, 0) == -1);
     assert(pioneerMixRouteValue(kDjmS11Profile, -1) == 0x030a);
-    std::cout << "Pioneer selected-pair routing and DJM-450 duplex checks passed\n";
+    std::cout << "Pioneer selected-pair routing, DJM-450 duplex and capture-rate checks passed\n";
 }
