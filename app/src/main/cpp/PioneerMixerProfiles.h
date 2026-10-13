@@ -126,11 +126,26 @@ constexpr PioneerMixerProfile kDjmS11Profile{
     14, 3, 10, 3, 24, 48000
 };
 
+// XDJ-XZ (2b73:002d) -- UNCONFIRMED GUESS (added by user request, untested on hardware).
+// Evidence: a diagnostics dump from a real XZ shows the audio lives on vendor-class (255)
+// interface 0 / alt 1 with isochronous OUT 0x01 and IN 0x82 (1024 B, interval 2) -- the same
+// topology as DJM-900NXS2 / DJM-750MK2. The IN wire format (12ch, 3-byte/24-bit) and the
+// 10ch/3B playback keepalive are copied from those models, NOT measured on the XZ.
+// No proprietary route commands are sent (RouteReadMode::None).
+constexpr PioneerMixerProfile kXdjXzProfile{
+    "XDJ-XZ", 0x002D, 0x002D, 3, 2,
+    {-1, -1, -1, -1, -1, -1},
+    {-1, -1, -1, -1, -1, -1},
+    PioneerRouteReadMode::None, true, true, 0, 1,
+    10, 3,  // playback OUT keepalive (guess)
+    12, 3, 24, 48000 // capture IN PCM (guess)
+};
+
 inline const PioneerMixerProfile* findPioneerMixerProfile(int vendorId, int productId) {
     if (vendorId != kAlphaThetaVendorId) return nullptr;
     constexpr const PioneerMixerProfile* profiles[] = {
         &kDjmA9Profile, &kDjmV10Profile, &kDjmV5Profile, &kDjm900Nxs2Profile,
-        &kDjm750Mk2Profile, &kDjm450Profile, &kDjmS11Profile
+        &kDjm750Mk2Profile, &kDjm450Profile, &kDjmS11Profile, &kXdjXzProfile
     };
     for (const auto* profile : profiles) {
         if (productId >= profile->productIdFirst && productId <= profile->productIdLast) {

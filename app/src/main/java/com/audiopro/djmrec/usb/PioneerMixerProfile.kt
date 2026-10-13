@@ -119,6 +119,17 @@ enum class PioneerMixerProfile(
         vendorCaptureInterface = 0, vendorCaptureAlternateSetting = 1,
         vendorCaptureChannelCount = 8, vendorCaptureSubframeSize = 3,
         vendorCaptureBitResolution = 24, vendorCaptureSampleRates = listOf(48_000)
+    ),
+    // XDJ-XZ: UNCONFIRMED GUESS. A real XZ's descriptors show vendor-class if0/alt1 with iso OUT
+    // 0x01 / IN 0x82 (same topology as DJM-900NXS2). 12ch x 3B/24-bit and 10ch playback keepalive
+    // are copied from that model, not measured. No proprietary routing (RouteReadMode.NONE).
+    XDJ_XZ(
+        "XDJ-XZ", setOf(0x002D), 4, 3, RouteReadMode.NONE,
+        listOf(-1, -1, -1),
+        requiresPlaybackTraffic = true, playbackInterface = 0, playbackAlternateSetting = 1,
+        vendorCaptureInterface = 0, vendorCaptureAlternateSetting = 1,
+        vendorCaptureChannelCount = 12, vendorCaptureSubframeSize = 3,
+        vendorCaptureBitResolution = 24, vendorCaptureSampleRates = listOf(48_000)
     );
 
     val hasVendorCaptureOverride: Boolean get() = vendorCaptureInterface >= 0
